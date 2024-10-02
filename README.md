@@ -16,3 +16,54 @@ Redux Principles in the ViewModel:
 Single Source of Truth: The ViewModel can maintain a single, immutable state object that holds all the information required to render the UI. Any changes to the state are only done via actions.
 Unidirectional Data Flow: Inspired by Redux, the ViewModel can manage state changes through an unidirectional data flow. The view sends actions or commands (like user interactions) to the ViewModel, which then updates the state. The new state triggers a view update.
 State Management: Like in Redux, the state in the ViewModel can be updated through reducers. When an action is dispatched, the state is modified, and the updated state is sent back to the view.
+
+## demo ViewModel:
+
+````markdown
+```swift
+import Foundation
+import RxRelay
+import Then
+
+class DemoViewModel: BaseMVVMReactorVM{
+    
+    var state     = BehaviorRelay<State>(value : .init())
+    var action    = PublishRelay<Action>()
+    var mutation  = PublishRelay<Mutation>()
+    var navigator = PublishRelay<Navigation>()
+    
+    func mutate(action: Action, with state: State) {
+        switch action {
+        case .getData:
+            break
+        }
+    }
+    
+    func reduce(previousState: State, mutation: Mutation) -> State? {
+        switch mutation {
+        case .setLoading(let loading):
+            return previousState.with {
+                $0.isLoading = loading
+            }
+        }
+    }
+}
+
+extension DemoViewModel{
+    struct State: Then {
+        var isLoading: Bool = false
+    }
+    
+    enum Action: Then {
+        case getData
+    }
+    
+    enum Mutation: Then {
+        case setLoading(loading: Bool)
+    }
+    
+    enum Navigation: Then {
+        case showError(error: String)
+    }
+}
+```
