@@ -17,9 +17,29 @@ Single Source of Truth: The ViewModel can maintain a single, immutable state obj
 Unidirectional Data Flow: Inspired by Redux, the ViewModel can manage state changes through an unidirectional data flow. The view sends actions or commands (like user interactions) to the ViewModel, which then updates the state. The new state triggers a view update.
 State Management: Like in Redux, the state in the ViewModel can be updated through reducers. When an action is dispatched, the state is modified, and the updated state is sent back to the view.
 
-## demo ViewModel:
+Based on ReactorKit (https://github.com/ReactorKit/ReactorKit)
+Usage: conform your VM to this protocol and call `.setupFlow(disposeBag:)` in the `init` method or viewDidload in VC.
 
-````markdown
+Main components:
+  - `state`: The current state of the View (used to display the UI)
+  - `action`: Actions performed by the view
+  - `mutation`: Not to be used in the View. Mutations (transformations) of the view (listened to in the `func mutate(action: Action, with state: State)` function)
+
+MVVM Data Flow:
+1. View -> Action -> mutation -> Model
+     - `action` -> bind/subscribe -> `mutate(action: Action, with state: State)` -> `mutation`
+
+2. Model -> ViewModel -> View
+     - `mutation` -> accept -> `reduce(previousState: State, mutation: Mutation) -> State?` -> `state`
+
+3. The View listens to the state via subscribe to update the UI
+
+# Swift Code Examples
+
+## Demo ViewModel
+
+This example basic viewmodel conform BaseMVVMReactorVM.
+
 ```swift
 import Foundation
 import RxRelay
@@ -67,3 +87,56 @@ extension DemoViewModel{
     }
 }
 ```
+
+## Demo VC
+
+This example basic VC using VM.
+
+```swift
+import Foundation
+import RxRelay
+import Then
+
+class DemoViewModel: BaseMVVMReactorVM{
+    
+    var state     = BehaviorRelay<State>(value : .init())
+    var action    = PublishRelay<Action>()
+    var mutation  = PublishRelay<Mutation>()
+    var navigator = PublishRelay<Navigation>()
+    
+    func mutate(action: Action, with state: State) {
+        switch action {
+        case .getData:
+            break
+        }
+    }
+    
+    func reduce(previousState: State, mutation: Mutation) -> State? {
+        switch mutation {
+        case .setLoading(let loading):
+            return previousState.with {
+                $0.isLoading = loading
+            }
+        }
+    }
+}
+
+extension DemoViewModel{
+    struct State: Then {
+        var isLoading: Bool = false
+    }
+    
+    enum Action: Then {
+        case getData
+    }
+    
+    enum Mutation: Then {
+        case setLoading(loading: Bool)
+    }
+    
+    enum Navigation: Then {
+        case showError(error: String)
+    }
+}
+```
+
