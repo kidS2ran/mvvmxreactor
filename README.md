@@ -93,50 +93,47 @@ extension DemoViewModel{
 This example basic VC using VM.
 
 ```swift
-import Foundation
-import RxRelay
-import Then
+import UIKit
+import RxSwift
 
-class DemoViewModel: BaseMVVMReactorVM{
+class ViewController: UIViewController {
+
+    private
+    var viewModel: DemoViewModel!
     
-    var state     = BehaviorRelay<State>(value : .init())
-    var action    = PublishRelay<Action>()
-    var mutation  = PublishRelay<Mutation>()
-    var navigator = PublishRelay<Navigation>()
+    private
+    var disposeBag = DisposeBag()
     
-    func mutate(action: Action, with state: State) {
-        switch action {
-        case .getData:
-            break
-        }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view.
+        viewModel = DemoViewModel()
+        viewModel.setupFlow(disposeBag: disposeBag)
+        bindViewModel()
     }
     
-    func reduce(previousState: State, mutation: Mutation) -> State? {
-        switch mutation {
-        case .setLoading(let loading):
-            return previousState.with {
-                $0.isLoading = loading
-            }
-        }
+}
+
+extension ViewController{
+    private
+    func bindViewModel(){
+        self.viewModel
+            .state
+            .map{$0.isLoading}
+            .subscribe(onNext:{ [weak self] isLoading in
+                ///listen loading state
+            })
+            .disposed(by: disposeBag)
     }
 }
 
-extension DemoViewModel{
-    struct State: Then {
-        var isLoading: Bool = false
-    }
-    
-    enum Action: Then {
-        case getData
-    }
-    
-    enum Mutation: Then {
-        case setLoading(loading: Bool)
-    }
-    
-    enum Navigation: Then {
-        case showError(error: String)
+extension ViewController{
+    //Make action
+    private
+    func actionA(){
+        self.viewModel.action.accept(.getData)
     }
 }
+
 ```
 
